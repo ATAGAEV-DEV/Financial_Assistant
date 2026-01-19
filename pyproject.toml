@@ -1,0 +1,8 @@
+[project]
+name = "financial-assistant"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.10"
+dependencies = [
+    "asyncpg>=0.31.0",
+]
