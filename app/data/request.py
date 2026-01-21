@@ -2,12 +2,12 @@ import asyncio
 import json
 from datetime import datetime
 
-from sqlalchemy import insert, select
+from sqlalchemy import select
 
 from app.data.models import UserQuery, Users, async_session
 
-# Убедитесь, что DB_TIMEOUT определён
-DB_TIMEOUT = 10  # секунд
+
+DB_TIMEOUT = 10
 
 
 async def get_user_by_id(user_id: int):
