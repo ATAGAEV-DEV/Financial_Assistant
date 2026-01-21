@@ -6,7 +6,6 @@ from sqlalchemy import select
 
 from app.data.models import UserQuery, Users, async_session
 
-
 DB_TIMEOUT = 10
 
 

@@ -40,7 +40,10 @@ async def start_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
     user = await get_user_by_id(user_id)
     if user:
-        await message.answer("Добро пожаловать!")
+        await message.answer(
+            "Добро пожаловать!\n"
+            " Пожалуйста, пришлите файл в формате CSV с полями: date, category, amount."
+        )
     else:
         await message.answer("Добро пожаловать! Для продолжения работы введите пароль для доступа.")
         await state.set_state(RegisterState.waiting_for_password)
