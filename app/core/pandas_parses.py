@@ -17,7 +17,7 @@ def csv_to_dict(csv_file) -> list | None:
         df["date"] = pd.to_datetime(df["date"], dayfirst=True)
         df = df[df["date"] >= datetime(datetime.now().year, datetime.now().month, 13)]
         df["date"] = df["date"].dt.strftime("%Y-%m-%d")
-        df["amount"] = df["amount"].astype(str).str.replace(r"[^\d.-]", "", regex=True)
+        df["amount"] = df["amount"].astype(str).str.replace(r"[^\d.]", "", regex=True)
         df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
         dict_result = df.to_dict(orient="records")
         return dict_result
