@@ -15,7 +15,18 @@ def csv_to_dict(csv_file):
         df = pd.read_csv(csv_file, encoding="utf-8", delimiter=",")
         df = df[["date", "category", "amount"]]
         df["date"] = pd.to_datetime(df["date"], dayfirst=True)
-        df = df[df["date"] >= datetime(datetime.now().year, datetime.now().month, 13)]
+
+        current_date = datetime.now()
+        if current_date.day <= 12:
+            filter_date = current_date.replace(day=13)
+            if filter_date.month == 1:
+                filter_date = filter_date.replace(year=filter_date.year - 1, month=12)
+            else:
+                filter_date = filter_date.replace(month=filter_date.month - 1)
+        else:
+            filter_date = current_date.replace(day=13)
+
+        df = df[df["date"] >= filter_date]
         df["date"] = df["date"].dt.strftime("%Y-%m-%d")
         df["amount"] = df["amount"].astype(str).str.replace(r"[^\d.]", "", regex=True)
         df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
@@ -40,8 +51,8 @@ def csv_to_dict(csv_file):
 #     dct = csv_to_dict("../../data.csv")
 #     print(dct)
 #     print(type(dct))
-#     response = await ai_generate(dct)
-#     print(response)
+#     # response = await ai_generate(dct)
+#     # print(response)
 #
 #
 # asyncio.run(main())
