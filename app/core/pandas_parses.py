@@ -26,21 +26,22 @@ def csv_to_dict(csv_file):
         else:
             filter_date = current_date.replace(day=13)
 
-        df = df[df["date"] >= filter_date]
+        df = df[df["date"].dt.normalize() >= pd.Timestamp(filter_date.date())]
         df["date"] = df["date"].dt.strftime("%Y-%m-%d")
         df["amount"] = df["amount"].astype(str).str.replace(r"[^\d.]", "", regex=True)
         df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
         df = df[df["category"] != "Зарплата"]
         dict_result = df.to_dict(orient="records")
         category_sum = df.groupby("category")["amount"].sum()
-
         category_sum = category_sum.sort_values(ascending=False)
+        total_amount = df["amount"].sum()
+
         report_lines = []
         for category, amount in category_sum.items():
             report_lines.append(f"{category}: {amount}")
 
         category_report = "\n".join(report_lines)
-        return dict_result, category_report
+        return dict_result, category_report, f"Сумма: {int(total_amount)}"
     except Exception as e:
         print(f"Ошибка обработки CSV файла: {e}")
 
@@ -51,8 +52,8 @@ def csv_to_dict(csv_file):
 #     dct = csv_to_dict("../../data.csv")
 #     print(dct)
 #     print(type(dct))
-#     # response = await ai_generate(dct)
-#     # print(response)
+#     response = await ai_generate(dct)
+#     print(response)
 #
 #
 # asyncio.run(main())
