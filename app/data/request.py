@@ -9,7 +9,7 @@ from app.data.models import UserQuery, Users, async_session
 DB_TIMEOUT = 10
 
 
-async def get_user_by_id(user_id: int):
+async def get_user_by_id(user_id: int) -> Users | None:
     """Получает пользователя из базы данных по его идентификатору.
 
     Выполняет асинхронный запрос к базе данных для поиска записи в таблице 'users'
@@ -36,7 +36,7 @@ async def get_user_by_id(user_id: int):
         return None
 
 
-async def add_user(user_id: int, username: str):
+async def add_user(user_id: int, username: str) -> None:
     """Добавляет нового пользователя в базу данных.
 
     Создаёт и сохраняет новую запись в таблице 'users' с указанными user_id и username.
@@ -58,7 +58,7 @@ async def add_user(user_id: int, username: str):
         print(f"Ошибка добавления пользователя: {e}")
 
 
-async def save_user_query(user_id: int, csv_data: list, ai_response: str):
+async def save_user_query(user_id: int, csv_data: list, ai_response: str) -> None:
     """Сохраняет запрос пользователя и ответ ИИ в базу данных.
 
     Args:
