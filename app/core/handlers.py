@@ -25,7 +25,7 @@ class RegisterState(StatesGroup):
 
 
 @router.message(CommandStart())
-async def start_handler(message: Message, state: FSMContext):
+async def start_handler(message: Message, state: FSMContext) -> None:
     """Обработчик команды /start.
 
     Проверяет, существует ли пользователь в базе данных.
@@ -50,7 +50,7 @@ async def start_handler(message: Message, state: FSMContext):
 
 
 @router.message(RegisterState.waiting_for_password)
-async def password_handler(message: Message, state: FSMContext):
+async def password_handler(message: Message, state: FSMContext) -> None:
     """Обработчик ввода пароля при регистрации.
 
     Проверяет хешированный ввод пользователя на соответствие
@@ -73,7 +73,7 @@ async def password_handler(message: Message, state: FSMContext):
 
 
 @router.message(lambda message: message.document and message.document.file_name.endswith(".csv"))
-async def handle_csv_file(message: Message):
+async def handle_csv_file(message: Message) -> None:
     """Обработчик CSV-файлов.
 
     Args:
