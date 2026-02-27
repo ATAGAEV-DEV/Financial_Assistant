@@ -3,7 +3,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, Integer, String, Text
-from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncEngine, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
 load_dotenv()
@@ -12,7 +12,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 SCHEMA = "public"
 
 
-def get_engine(schema: str):
+def get_engine(schema: str) -> AsyncEngine:
     """Создаёт и возвращает асинхронный движок SQLAlchemy с указанным схемой.
 
     Устанавливает параметр search_path в соединении, чтобы все запросы выполнялись
@@ -71,7 +71,7 @@ class UserQuery(Base):
     created_at = Column(DateTime, default=datetime.now)
 
 
-async def init_models():
+async def init_models() -> None:
     """Инициализирует модели базы данных.
 
     Создаёт таблицы в базе данных, если они ещё не существуют.
