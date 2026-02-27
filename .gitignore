@@ -3,3 +3,7 @@
 /.python-version
 /chroma_db
 /.idea
+__pycache__/
+data.csv
+main_test.py
+.DS_Store
