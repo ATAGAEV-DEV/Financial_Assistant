@@ -1,14 +1,15 @@
 from datetime import datetime
+from typing import Any
 
 import pandas as pd
 
 
-def csv_to_dict(csv_file):
+def csv_to_dict(csv_file: Any) -> tuple:
     """Преобразует CSV-файл в список словарей с определённой структурой.
 
     Функция читает CSV-файл, извлекает столбцы 'date', 'category' и 'amount',
     обрабатывает данные: приводит даты к формату YYYY-MM-DD, фильтрует записи,
-    оставляя только те, дата которых не раньше 13-го числа текущего месяца,
+    оставляя только те, дата которых не раньше 1-го числа текущего месяца,
     очищает и преобразует суммы к числовому типу.
     """
     try:
@@ -17,14 +18,7 @@ def csv_to_dict(csv_file):
         df["date"] = pd.to_datetime(df["date"], dayfirst=True)
 
         current_date = datetime.now()
-        if current_date.day <= 12:
-            filter_date = current_date.replace(day=13)
-            if filter_date.month == 1:
-                filter_date = filter_date.replace(year=filter_date.year - 1, month=12)
-            else:
-                filter_date = filter_date.replace(month=filter_date.month - 1)
-        else:
-            filter_date = current_date.replace(day=13)
+        filter_date = current_date.replace(day=1)
 
         df = df[df["date"].dt.normalize() >= pd.Timestamp(filter_date.date())]
         df["date"] = df["date"].dt.strftime("%Y-%m-%d")
@@ -44,16 +38,3 @@ def csv_to_dict(csv_file):
         return dict_result, category_report, f"Сумма: {int(total_amount)}"
     except Exception as e:
         print(f"Ошибка обработки CSV файла: {e}")
-
-
-# import asyncio
-# from app.core.generate import ai_generate
-# async def main():
-#     dct = csv_to_dict("../../data.csv")
-#     print(dct)
-#     print(type(dct))
-#     response = await ai_generate(dct)
-#     print(response)
-#
-#
-# asyncio.run(main())
