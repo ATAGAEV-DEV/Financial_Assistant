@@ -26,7 +26,10 @@ def get_engine(schema: str) -> AsyncEngine:
 
     """
     return create_async_engine(
-        DATABASE_URL, connect_args={"server_settings": {"search_path": schema}}
+        DATABASE_URL,
+        connect_args={"server_settings": {"search_path": schema}},
+        pool_pre_ping=True,
+        pool_recycle=1800,
     )
 
 
