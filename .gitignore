@@ -8,3 +8,4 @@ data.csv
 main_test.py
 .DS_Store
 .agent/
+_paddlebot_logs.txt
