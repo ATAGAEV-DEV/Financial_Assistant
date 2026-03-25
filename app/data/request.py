@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.data.models import UserQuery, Users, async_session
 
@@ -37,10 +38,10 @@ async def get_user_by_id(user_id: int) -> Users | None:
 
 
 async def add_user(user_id: int, username: str) -> None:
-    """Добавляет нового пользователя в базу данных.
+    """Добавляет нового пользователя или обновляет существующего в базе данных.
 
-    Создаёт и сохраняет новую запись в таблице 'users' с указанными user_id и username.
-    В случае ошибки выводит сообщение об ошибке.
+    Использует upsert (INSERT ... ON CONFLICT DO UPDATE) для безопасного
+    добавления пользователя. Если пользователь уже существует, обновляется username.
 
     Args:
         user_id (int): Уникальный идентификатор пользователя в Telegram.
@@ -49,8 +50,12 @@ async def add_user(user_id: int, username: str) -> None:
     """
     try:
         async with async_session() as session:
-            user = Users(user_id=user_id, username=username)
-            session.add(user)
+            stmt = pg_insert(Users).values(user_id=user_id, username=username)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["user_id"],
+                set_={"username": username},
+            )
+            await asyncio.wait_for(session.execute(stmt), timeout=DB_TIMEOUT)
             await asyncio.wait_for(session.commit(), timeout=DB_TIMEOUT)
     except asyncio.TimeoutError:
         print(f"Таймаут при добавлении пользователя с user_id={user_id}")
