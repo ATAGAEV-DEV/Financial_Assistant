@@ -42,13 +42,12 @@ def csv_to_dict(csv_file: Any, current_date: datetime) -> str:
         if df.empty:
             return "Нет данных о расходах за текущий месяц."
 
-        last_date = df["date"].max()
-        day = last_date.day
-        month_name_gen = _month_genitive(last_date.month)
-        year = last_date.year
+        day = current_date.day
+        month_name_gen = _month_genitive(current_date.month)
+        year = current_date.year
         date_str = f"{day} {month_name_gen} {year} года"
 
-        month_name = MONTH_NAMES.get(last_date.month, str(last_date.month))
+        month_name = MONTH_NAMES.get(current_date.month, str(current_date.month))
 
         total_amount = int(df["amount"].sum())
 
