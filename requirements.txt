@@ -6,3 +6,4 @@ pandas~=2.3.3
 SQLAlchemy~=2.0.45
 asyncpg~=0.31.0
 pytz~=2025.2
+greenlet~=3.5.0
