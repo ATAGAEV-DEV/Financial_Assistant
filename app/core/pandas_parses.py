@@ -24,7 +24,7 @@ RESERVE_LIMIT = 10_000
 MAIN_BUDGET = 30_000
 
 
-def csv_to_dict(csv_file: Any, current_date: datetime) -> str:
+def csv_to_dict(csv_file: Any, current_date: datetime) -> tuple[str, list[dict]]:
     """Преобразует CSV-файл в текстовый отчёт о расходах за текущий месяц."""
     try:
         df = pd.read_csv(csv_file, encoding="utf-8", delimiter=",")
@@ -40,7 +40,7 @@ def csv_to_dict(csv_file: Any, current_date: datetime) -> str:
         df = df.dropna(subset=["amount"])
 
         if df.empty:
-            return "Нет данных о расходах за текущий месяц."
+            return "Нет данных о расходах за текущий месяц.", []
 
         day = current_date.day
         month_name_gen = _month_genitive(current_date.month)
@@ -149,11 +149,13 @@ def csv_to_dict(csv_file: Any, current_date: datetime) -> str:
                 f" тебе необходимо {zero_days} дней без трат."
             )
 
-        return "\n".join(lines)
+        report = "\n".join(lines)
+        df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+        return report, df.to_dict(orient="records")
 
     except Exception as e:
         print(f"Ошибка обработки CSV файла: {e}")
-        return f"Ошибка обработки файла: {e}"
+        return f"Ошибка обработки файла: {e}", []
 
 
 def _month_genitive(month: int) -> str:

@@ -7,7 +7,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 
 from app.core.pandas_parses import csv_to_dict
-from app.data.request import add_user, get_user_by_id
+from app.data.request import add_user, get_user_by_id, save_user_query
 from app.tools.utils import hash_password
 
 router = Router()
@@ -81,11 +81,12 @@ async def handle_csv_file(message: Message) -> None:
     current_date = datetime.now()
 
     try:
-        report = csv_to_dict(file, current_date)
+        report, csv_data = csv_to_dict(file, current_date)
         if not report:
             await message.answer("Файл пуст или содержит некорректные данные.")
             return
 
+        await save_user_query(message.from_user.id, csv_data, report)
         await message.answer(report)
     except Exception as e:
         await message.answer(f"Ошибка обработки файла: {str(e)}")
