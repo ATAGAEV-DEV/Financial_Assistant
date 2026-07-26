@@ -76,7 +76,7 @@ class DualSessionProxy:
         if getattr(statement, "is_dml", False):
             try:
                 await self.remote.execute(statement, *args, **kwargs)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - намеренный catch-all для логирования сбоев удалённой БД
                 print(f"Ошибка выполнения запроса в удаленной БД: {e}")
         return await self.local.execute(statement, *args, **kwargs)
 
@@ -93,7 +93,7 @@ class DualSessionProxy:
         await self.local.commit()
         try:
             await self.remote.commit()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - намеренный catch-all для логирования сбоев удалённой БД
             print(f"Ошибка коммита в удаленной БД: {e}")
             await self.remote.rollback()
 
@@ -152,5 +152,5 @@ async def init_models() -> None:
     try:
         async with engine_remote.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - намеренный catch-all для логирования сбоев удалённой БД
         print(f"Ошибка создания таблиц в удаленной БД: {e}")
