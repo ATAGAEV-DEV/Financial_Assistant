@@ -89,7 +89,7 @@ async def handle_csv_file(message: Message) -> None:
         await save_user_query(message.from_user.id, csv_data, report)
         await message.answer(report)
     except Exception as e:
-        await message.answer(f"Ошибка обработки файла: {str(e)}")
+        await message.answer(f"Ошибка обработки файла: {e!s}")
 
     finally:
         file.close()
