@@ -46,7 +46,7 @@ async def ai_generate(expenses: tuple) -> str | None:
     except APIError as e:
         print(f"Ошибка API: {e}")
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - намеренный catch-all для логирования неожиданных ошибок API
         print(f"Неожиданная ошибка: {e}")
 
 
