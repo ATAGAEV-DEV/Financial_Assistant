@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from aiogram import Router
 from aiogram.filters import CommandStart
@@ -78,7 +78,7 @@ async def handle_csv_file(message: Message) -> None:
     """Обработчик CSV-файлов."""
     document = message.document
     file = await message.bot.download(document.file_id)
-    current_date = datetime.now(tz=timezone.utc)
+    current_date = datetime.now()  # noqa: DTZ005 - намеренно naive datetime для совместимости с TIMESTAMP WITHOUT TIME ZONE
 
     try:
         report, csv_data = csv_to_dict(file, current_date)
