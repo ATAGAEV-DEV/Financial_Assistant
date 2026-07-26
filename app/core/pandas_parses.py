@@ -20,8 +20,9 @@ MONTH_NAMES = {
 }
 
 RESERVE_CATEGORIES = {"Машина", "Лекарство", "Подарки", "Шопинг"}
-RESERVE_LIMIT = 10_000
+RESERVE_LIMIT = 20_000
 MAIN_BUDGET = 30_000
+DAILY_LIMIT = 1_000
 
 
 def _format_categories(categories: set[str]) -> str:
@@ -72,16 +73,19 @@ def csv_to_dict(csv_file: Any, current_date: datetime) -> tuple[str, list[dict]]
         reserve_diff = RESERVE_LIMIT - reserve_spent
         reserve_spent_fmt = f"{reserve_spent:,}".replace(",", " ")
         categories_str = _format_categories(RESERVE_CATEGORIES)
+        reserve_limit_str = f"{RESERVE_LIMIT:,}".replace(",", " ")
+        main_budget_str = f"{MAIN_BUDGET:,}".replace(",", " ")
+        daily_limit_str = f"{DAILY_LIMIT:,}".replace(",", " ")
         if reserve_diff >= 0:
             reserve_diff_fmt = f"{reserve_diff:,}".replace(",", " ")
             reserve_line = (
-                f"Из резерва (10 000 руб.) на категории {categories_str} потрачено: "
+                f"Из резерва ({reserve_limit_str} руб.) на категории {categories_str} потрачено: "
                 f"{reserve_spent_fmt} руб. Остаток резерва: {reserve_diff_fmt} руб."
             )
         else:
             reserve_over_fmt = f"{abs(reserve_diff):,}".replace(",", " ")
             reserve_line = (
-                f"Из резерва (10 000 руб.) на категории {categories_str} потрачено: "
+                f"Из резерва ({reserve_limit_str} руб.) на категории {categories_str} потрачено: "
                 f"{reserve_spent_fmt} руб. Резерв полностью исчерпан"
                 f" и превышен на {reserve_over_fmt} руб."
             )
@@ -92,7 +96,7 @@ def csv_to_dict(csv_file: Any, current_date: datetime) -> tuple[str, list[dict]]
         days_passed = current_date.day
         avg_daily_actual = round(main_spent / days_passed)
         recommended_daily = round(max(0, main_left) / days_left) if days_left > 0 else 0
-        recommended_daily_capped = min(recommended_daily, 1000)
+        recommended_daily_capped = min(recommended_daily, DAILY_LIMIT)
 
         total_amount_fmt = f"{total_amount:,}".replace(",", " ")
 
@@ -116,16 +120,16 @@ def csv_to_dict(csv_file: Any, current_date: datetime) -> tuple[str, list[dict]]
         recommended_daily_capped_fmt = f"{recommended_daily_capped:,}".replace(",", " ")
         avg_daily_actual_fmt = f"{avg_daily_actual:,}".replace(",", " ")
 
-        if recommended_daily > 1000:
+        if recommended_daily > DAILY_LIMIT:
             recommendation_line = (
-                "Чтобы уложиться в плановый бюджет (30 000 руб.),"
-                " тебе теперь можно тратить в среднем не более 1 000 рублей в день"
+                f"Чтобы уложиться в плановый бюджет ({main_budget_str} руб.),"
+                f" тебе теперь можно тратить в среднем не более {daily_limit_str} рублей в день"
                 f" (расчётный лимит составил бы {recommended_daily_fmt} руб.,"
-                " но мы ограничиваем его 1 000 руб.)."
+                f" но мы ограничиваем его {daily_limit_str} руб.)."
             )
         else:
             recommendation_line = (
-                "Чтобы уложиться в плановый бюджет (30 000 руб.),"
+                f"Чтобы уложиться в плановый бюджет ({main_budget_str} руб.),"
                 " тебе теперь можно тратить в среднем"
                 f" {recommended_daily_capped_fmt} рублей в день."
             )
@@ -137,27 +141,33 @@ def csv_to_dict(csv_file: Any, current_date: datetime) -> tuple[str, list[dict]]
             "",
             "Разделение по бюджетам:",
             reserve_line,
-            "Из основного бюджета (30 000 руб.) на регулярные нужды потрачено:"
-            f" {main_spent_fmt} руб.",
+            (
+                f"Из основного бюджета ({main_budget_str} руб.) на регулярные нужды потрачено:"
+                f" {main_spent_fmt} руб."
+            ),
             f"Остаток основного бюджета: {main_left_fmt} руб.",
             f"До конца периода осталось {days_left} дней (включая сегодня).",
             "",
             "Рекомендация по тратам:",
             recommendation_line,
-            f"Пока что твои средние фактические дневные траты составляют"
-            f" {avg_daily_actual_fmt} рублей"
-            f" (из расчета за {days_passed} прошедших дней).",
-            f"Если ты продолжишь тратить в таком же ритме, то к концу"
-            f" {month_name_gen} общая сумма расходов составит"
-            f" около {projected_total_fmt} рублей.",
+            (
+                f"Пока что твои средние фактические дневные траты составляют"
+                f" {avg_daily_actual_fmt} рублей"
+                f" (из расчета за {days_passed} прошедших дней)."
+            ),
+            (
+                f"Если ты продолжишь тратить в таком же ритме, то к концу"
+                f" {month_name_gen} общая сумма расходов составит"
+                f" около {projected_total_fmt} рублей."
+            ),
         ]
 
-        if avg_daily_actual > 1000:
-            overspend = avg_daily_actual - 1000
-            zero_days = -(-overspend * days_passed // 1000)
+        if avg_daily_actual > DAILY_LIMIT:
+            overspend = avg_daily_actual - DAILY_LIMIT
+            zero_days = -(-overspend * days_passed // DAILY_LIMIT)
             lines.append(
                 f"Так как текущий дневной расход превышает целевой"
-                f" (около 1 000 руб. в день на основной бюджет)"
+                f" (около {daily_limit_str} руб. в день на основной бюджет)"
                 f" более чем на {overspend} рублей,"
                 f" тебе необходимо {zero_days} дней без трат."
             )
@@ -166,7 +176,7 @@ def csv_to_dict(csv_file: Any, current_date: datetime) -> tuple[str, list[dict]]
         df["date"] = df["date"].dt.strftime("%Y-%m-%d")
         return report, df.to_dict(orient="records")
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - намеренный catch-all для CSV-обработки
         print(f"Ошибка обработки CSV файла: {e}")
         return f"Ошибка обработки файла: {e}", []
 
