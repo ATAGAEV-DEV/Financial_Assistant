@@ -19,9 +19,21 @@ MONTH_NAMES = {
     12: "Декабрь",
 }
 
-RESERVE_CATEGORIES = {"Машина", "Лекарство", "Подарки"}
+RESERVE_CATEGORIES = {"Машина", "Лекарство", "Подарки", "Шопинг"}
 RESERVE_LIMIT = 10_000
 MAIN_BUDGET = 30_000
+
+
+def _format_categories(categories: set[str]) -> str:
+    """Форматирует множество категорий в строку с правильной русской грамматикой."""
+    sorted_cats = sorted(categories)
+    if not sorted_cats:
+        return ""
+    if len(sorted_cats) == 1:
+        return sorted_cats[0]
+    if len(sorted_cats) == 2:
+        return f"{sorted_cats[0]} и {sorted_cats[1]}"
+    return ", ".join(sorted_cats[:-1]) + f" и {sorted_cats[-1]}"
 
 
 def csv_to_dict(csv_file: Any, current_date: datetime) -> tuple[str, list[dict]]:
@@ -59,16 +71,17 @@ def csv_to_dict(csv_file: Any, current_date: datetime) -> tuple[str, list[dict]]
 
         reserve_diff = RESERVE_LIMIT - reserve_spent
         reserve_spent_fmt = f"{reserve_spent:,}".replace(",", " ")
+        categories_str = _format_categories(RESERVE_CATEGORIES)
         if reserve_diff >= 0:
             reserve_diff_fmt = f"{reserve_diff:,}".replace(",", " ")
             reserve_line = (
-                f"Из резерва (10 000 руб.) на категории Машина, Лекарство и Подарки потрачено: "
+                f"Из резерва (10 000 руб.) на категории {categories_str} потрачено: "
                 f"{reserve_spent_fmt} руб. Остаток резерва: {reserve_diff_fmt} руб."
             )
         else:
             reserve_over_fmt = f"{abs(reserve_diff):,}".replace(",", " ")
             reserve_line = (
-                f"Из резерва (10 000 руб.) на категории Машина, Лекарство и Подарки потрачено: "
+                f"Из резерва (10 000 руб.) на категории {categories_str} потрачено: "
                 f"{reserve_spent_fmt} руб. Резерв полностью исчерпан"
                 f" и превышен на {reserve_over_fmt} руб."
             )
