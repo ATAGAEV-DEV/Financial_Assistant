@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from aiogram import Router
 from aiogram.filters import CommandStart
@@ -78,7 +78,7 @@ async def handle_csv_file(message: Message) -> None:
     """Обработчик CSV-файлов."""
     document = message.document
     file = await message.bot.download(document.file_id)
-    current_date = datetime.now()
+    current_date = datetime.now(tz=timezone.utc)
 
     try:
         report, csv_data = csv_to_dict(file, current_date)
@@ -88,7 +88,7 @@ async def handle_csv_file(message: Message) -> None:
 
         await save_user_query(message.from_user.id, csv_data, report)
         await message.answer(report)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - намеренный catch-all для пользовательского ответа об ошибке
         await message.answer(f"Ошибка обработки файла: {e!s}")
 
     finally:
