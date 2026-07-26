@@ -1,6 +1,6 @@
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -32,7 +32,7 @@ async def get_user_by_id(user_id: int) -> Users | None:
     except asyncio.TimeoutError:
         print(f"Таймаут при получении пользователя с user_id={user_id}")
         return None
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - намеренный catch-all для логирования сбоев БД
         print(f"Ошибка получения пользователя: {e}")
         return None
 
@@ -59,7 +59,7 @@ async def add_user(user_id: int, username: str) -> None:
             await asyncio.wait_for(session.commit(), timeout=DB_TIMEOUT)
     except asyncio.TimeoutError:
         print(f"Таймаут при добавлении пользователя с user_id={user_id}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - намеренный catch-all для логирования сбоев БД
         print(f"Ошибка добавления пользователя: {e}")
 
 
@@ -78,11 +78,11 @@ async def save_user_query(user_id: int, csv_data: list, ai_response: str) -> Non
                 user_id=user_id,
                 csv_data=json.dumps(csv_data, ensure_ascii=False),
                 ai_response=ai_response,
-                created_at=datetime.now(),
+                created_at=datetime.now(tz=timezone.utc),
             )
             session.add(user_query)
             await asyncio.wait_for(session.commit(), timeout=DB_TIMEOUT)
     except asyncio.TimeoutError:
         print(f"Таймаут при сохранении запроса пользователя с user_id={user_id}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - намеренный catch-all для логирования сбоев БД
         print(f"Ошибка сохранения запроса пользователя: {e}")
