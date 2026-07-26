@@ -1,8 +1,8 @@
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any
 from datetime import datetime
+from typing import Any
 
 from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, Integer, String, Text
@@ -119,8 +119,6 @@ class Base(AsyncAttrs, DeclarativeBase):
     Наследуется от AsyncAttrs и DeclarativeBase, обеспечивая совместимость
     с асинхронным режимом работы SQLAlchemy.
     """
-
-    pass
 
 
 class Users(Base):
