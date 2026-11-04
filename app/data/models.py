@@ -1,14 +1,10 @@
 import os
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
-from typing import Any
 
 from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, Integer, String, Text
 from sqlalchemy.ext.asyncio import (
     AsyncAttrs,
     AsyncEngine,
-    AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
@@ -19,18 +15,11 @@ from app.core.time import utc_now_naive
 load_dotenv()
 
 DATABASE_URL: str = os.getenv("DATABASE_URL", "")
-DATABASE_URL_LOCAL: str = os.getenv("DATABASE_URL_LOCAL", "")
 
 if not DATABASE_URL:
     raise RuntimeError(
-        "DATABASE_URL не задан в переменных окружения. "
-        "Установите переменную для подключения к удаленному PostgreSQL."
-    )
-
-if not DATABASE_URL_LOCAL:
-    raise RuntimeError(
-        "DATABASE_URL_LOCAL не задан в переменных окружения. "
-        "Установите переменную для подключения к локальному PostgreSQL."
+        "DATABASE_URL не задан в переменных окружения. Установите переменную "
+        "для подключения к PostgreSQL."
     )
 SCHEMA = "pictures"
 
@@ -49,69 +38,8 @@ def get_engine(schema: str, db_url: str) -> AsyncEngine:
     )
 
 
-if SCHEMA is None or SCHEMA == "":
-    engine_remote = get_engine("public", DATABASE_URL)
-    engine_local = get_engine("public", DATABASE_URL_LOCAL)
-else:
-    engine_remote = get_engine(SCHEMA, DATABASE_URL)
-    engine_local = get_engine(SCHEMA, DATABASE_URL_LOCAL)
-
-async_session_local_maker = async_sessionmaker(engine_local)
-async_session_remote_maker = async_sessionmaker(engine_remote)
-
-
-class DualSessionProxy:
-    """Прокси-класс для выполнения операций в двух базах данных.
-
-    Чтение выполняется только из локальной БД.
-    Запись (INSERT, UPDATE, DELETE) дублируется в обе БД.
-    """
-
-    def __init__(self, local_session: AsyncSession, remote_session: AsyncSession) -> None:
-        """Инициализирует прокси-сессию."""
-        self.local = local_session
-        self.remote = remote_session
-
-    async def execute(self, statement: Any, *args: Any, **kwargs: Any) -> Any:
-        """Выполняет запрос. DML-запросы дублируются в удаленную БД."""
-        if getattr(statement, "is_dml", False):
-            try:
-                await self.remote.execute(statement, *args, **kwargs)
-            except Exception as e:  # noqa: BLE001 - намеренный catch-all для логирования сбоев удалённой БД
-                print(f"Ошибка выполнения запроса в удаленной БД: {e}")
-        return await self.local.execute(statement, *args, **kwargs)
-
-    def add(self, instance: Any) -> None:
-        """Добавляет объект в обе сессии."""
-        self.local.add(instance)
-        state = instance.__dict__.copy()
-        state.pop("_sa_instance_state", None)
-        remote_instance = instance.__class__(**state)
-        self.remote.add(remote_instance)
-
-    async def commit(self) -> None:
-        """Фиксирует транзакцию в обеих БД."""
-        await self.local.commit()
-        try:
-            await self.remote.commit()
-        except Exception as e:  # noqa: BLE001 - намеренный catch-all для логирования сбоев удалённой БД
-            print(f"Ошибка коммита в удаленной БД: {e}")
-            await self.remote.rollback()
-
-    async def rollback(self) -> None:
-        """Откатывает транзакцию в обеих БД."""
-        await self.local.rollback()
-        await self.remote.rollback()
-
-
-@asynccontextmanager
-async def async_session() -> AsyncGenerator[DualSessionProxy]:
-    """Контекстный менеджер для работы с прокси-сессией DualSessionProxy."""
-    async with (
-        async_session_local_maker() as local_session,
-        async_session_remote_maker() as remote_session,
-    ):
-        yield DualSessionProxy(local_session, remote_session)
+engine = get_engine(SCHEMA, DATABASE_URL)
+async_session_maker = async_sessionmaker(engine)
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -147,11 +75,6 @@ class UserQuery(Base):
 
 
 async def init_models() -> None:
-    """Создает таблицы в базах данных, если они не существуют."""
-    async with engine_local.begin() as conn:
+    """Создает таблицы в базе данных, если они не существуют."""
+    async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    try:
-        async with engine_remote.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-    except Exception as e:  # noqa: BLE001 - намеренный catch-all для логирования сбоев удалённой БД
-        print(f"Ошибка создания таблиц в удаленной БД: {e}")
