@@ -1,5 +1,4 @@
 import hashlib
-import re
 
 
 def hash_password(password: str) -> str:
@@ -16,20 +15,3 @@ def hash_password(password: str) -> str:
 
     """
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
-
-
-def clean_text(text: str) -> str:
-    """Очищает текст от markdown-разметки.
-
-    Удаляет из строки все вхождения следующих символов разметки:
-    жирный шрифт (**), курсив (*), заголовки (###, ##, #).
-
-    Args:
-        text (str): Текст, из которого необходимо удалить markdown-разметку.
-
-    Returns:
-        str: Очищенный текст без указанных символов разметки.
-
-    """
-    cleaned_text = re.sub(r"(\*\*|\*|###|##|#)", "", text)
-    return cleaned_text
