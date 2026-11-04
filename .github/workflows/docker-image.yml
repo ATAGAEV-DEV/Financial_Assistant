@@ -29,8 +29,6 @@ jobs:
         run: |
           docker run -d --name finassistbot \
             --restart unless-stopped \
-            -e AI_TOKEN_POLZA="${{ secrets.AI_TOKEN_POLZA }}" \
             -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-            -e DATABASE_URL_LOCAL="${{ secrets.DATABASE_URL_LOCAL }}" \
             -e TG_TOKEN="${{ secrets.TG_TOKEN }}" \
             financialassistentbot:latest
