@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.core.time import utc_now_naive
-from app.data.models import UserQuery, Users, async_session
+from app.data.models import UserQuery, Users, async_session_maker
 
 DB_TIMEOUT = 10
 
@@ -25,7 +25,7 @@ async def get_user_by_id(user_id: int) -> Users | None:
 
     """
     try:
-        async with async_session() as session:
+        async with async_session_maker() as session:
             query = select(Users).where(Users.user_id == user_id)
             result = await asyncio.wait_for(session.execute(query), timeout=DB_TIMEOUT)
             return result.scalar_one_or_none()
@@ -49,7 +49,7 @@ async def add_user(user_id: int, username: str) -> None:
 
     """
     try:
-        async with async_session() as session:
+        async with async_session_maker() as session:
             stmt = pg_insert(Users).values(user_id=user_id, username=username)
             stmt = stmt.on_conflict_do_update(
                 index_elements=["user_id"],
@@ -73,7 +73,7 @@ async def save_user_query(user_id: int, csv_data: list, ai_response: str) -> Non
 
     """
     try:
-        async with async_session() as session:
+        async with async_session_maker() as session:
             user_query = UserQuery(
                 user_id=user_id,
                 csv_data=json.dumps(csv_data, ensure_ascii=False),
