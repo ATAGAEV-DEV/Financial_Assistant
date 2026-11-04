@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
@@ -7,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 
 from app.core.pandas_parses import csv_to_dict
+from app.core.time import business_now
 from app.data.request import add_user, get_user_by_id, save_user_query
 from app.tools.utils import hash_password
 
@@ -78,7 +77,7 @@ async def handle_csv_file(message: Message) -> None:
     """Обработчик CSV-файлов."""
     document = message.document
     file = await message.bot.download(document.file_id)
-    current_date = datetime.now()  # noqa: DTZ005 - намеренно naive datetime для совместимости с TIMESTAMP WITHOUT TIME ZONE
+    current_date = business_now()
 
     try:
         report, csv_data = csv_to_dict(file, current_date)
