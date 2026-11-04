@@ -37,6 +37,7 @@ class DatabaseIntegrationTests(unittest.IsolatedAsyncioTestCase):
     test_user_id = 2_000_000_000 + (os.getpid() % 100_000)
 
     async def asyncSetUp(self) -> None:
+        """Create an isolated schema and route requests to its session."""
         self.schema_name = f"it_financial_assistant_{uuid.uuid4().hex}"
         self.admin_engine = create_async_engine(DATABASE_URL, poolclass=NullPool)
         self.test_engine = create_async_engine(
@@ -56,6 +57,7 @@ class DatabaseIntegrationTests(unittest.IsolatedAsyncioTestCase):
         request_module.async_session_maker = test_session_maker
 
     async def asyncTearDown(self) -> None:
+        """Restore the application session and remove the isolated schema."""
         request_module.async_session_maker = self.original_session_maker
 
         await self.test_engine.dispose()
@@ -73,6 +75,7 @@ class DatabaseIntegrationTests(unittest.IsolatedAsyncioTestCase):
             return list(result.scalars())
 
     async def test_created_at_column_is_timestamp_without_timezone(self) -> None:
+        """The created_at column remains compatible with the existing schema."""
         async with AsyncSession(self.test_engine) as session:
             result = await session.execute(
                 text(
@@ -90,6 +93,7 @@ class DatabaseIntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.scalar_one(), "timestamp without time zone")
 
     async def test_save_user_query_persists_naive_utc_timestamp(self) -> None:
+        """Saving a query stores one response with a naive UTC timestamp."""
         await save_user_query(
             self.test_user_id,
             [{"date": "2026-11-04", "category": "Еда", "amount": 350}],
@@ -107,6 +111,7 @@ class DatabaseIntegrationTests(unittest.IsolatedAsyncioTestCase):
             self.assertLess(abs(row.created_at - current_utc), timedelta(seconds=30))
 
     async def test_user_query_model_default_is_naive_utc(self) -> None:
+        """The model default stores a naive UTC timestamp."""
         async with AsyncSession(self.test_engine) as session:
             session.add(
                 UserQuery(
