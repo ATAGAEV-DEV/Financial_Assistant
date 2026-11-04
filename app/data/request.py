@@ -1,10 +1,10 @@
 import asyncio
 import json
-from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from app.core.time import utc_now_naive
 from app.data.models import UserQuery, Users, async_session
 
 DB_TIMEOUT = 10
@@ -78,7 +78,7 @@ async def save_user_query(user_id: int, csv_data: list, ai_response: str) -> Non
                 user_id=user_id,
                 csv_data=json.dumps(csv_data, ensure_ascii=False),
                 ai_response=ai_response,
-                created_at=datetime.now(),  # noqa: DTZ005 - намеренно naive datetime для совместимости с TIMESTAMP WITHOUT TIME ZONE
+                created_at=utc_now_naive(),
             )
             session.add(user_query)
             await asyncio.wait_for(session.commit(), timeout=DB_TIMEOUT)
