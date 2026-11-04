@@ -1,7 +1,6 @@
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import datetime
 from typing import Any
 
 from dotenv import load_dotenv
@@ -14,6 +13,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
+
+from app.core.time import utc_now_naive
 
 load_dotenv()
 
@@ -142,7 +143,7 @@ class UserQuery(Base):
     user_id = Column(Integer, nullable=False)
     csv_data = Column(Text, nullable=False)  # JSON в виде строки
     ai_response = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime(timezone=False), default=utc_now_naive)
 
 
 async def init_models() -> None:
