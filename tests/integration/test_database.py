@@ -10,22 +10,21 @@ from sqlalchemy.pool import NullPool
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 DATABASE_URL = TEST_DATABASE_URL or ""
-models: Any = None
+request_module: Any = None
 Base: Any = None
 UserQuery: Any = None
 save_user_query: Any = None
 
 if TEST_DATABASE_URL:
-    # models.py requires both application URLs at import time. Keep them scoped to this test process.
+    # Keep the application database URL scoped to this test process.
     os.environ["DATABASE_URL"] = TEST_DATABASE_URL
-    os.environ["DATABASE_URL_LOCAL"] = TEST_DATABASE_URL
 
-    from app.data import models as imported_models
+    from app.data import request as imported_request
     from app.data.models import Base as imported_base
     from app.data.models import UserQuery as imported_user_query
     from app.data.request import save_user_query as imported_save_user_query
 
-    models = imported_models
+    request_module = imported_request
     Base = imported_base
     UserQuery = imported_user_query
     save_user_query = imported_save_user_query
@@ -52,15 +51,12 @@ class DatabaseIntegrationTests(unittest.IsolatedAsyncioTestCase):
         async with self.test_engine.begin() as connection:
             await connection.run_sync(Base.metadata.create_all)
 
-        self.original_local_maker = models.async_session_local_maker
-        self.original_remote_maker = models.async_session_remote_maker
+        self.original_session_maker = request_module.async_session_maker
         test_session_maker = async_sessionmaker(self.test_engine)
-        models.async_session_local_maker = test_session_maker
-        models.async_session_remote_maker = test_session_maker
+        request_module.async_session_maker = test_session_maker
 
     async def asyncTearDown(self) -> None:
-        models.async_session_local_maker = self.original_local_maker
-        models.async_session_remote_maker = self.original_remote_maker
+        request_module.async_session_maker = self.original_session_maker
 
         await self.test_engine.dispose()
         async with self.admin_engine.begin() as connection:
@@ -102,8 +98,7 @@ class DatabaseIntegrationTests(unittest.IsolatedAsyncioTestCase):
 
         rows = await self._query_rows()
 
-        # DualSessionProxy writes to both configured sessions, which share this test schema.
-        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows), 1)
         current_utc = datetime.now(timezone.utc).replace(tzinfo=None)
         for row in rows:
             self.assertEqual(row.ai_response, "integration response")
