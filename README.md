@@ -76,12 +76,20 @@ cd Financial_Assistant
 
 ### 2. Настройка переменных окружения
 
-Создайте файл `.env` в корне проекта:
+Создайте `.env` на основе `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+После этого укажите в `.env` свои значения:
 
 ```env
 TG_TOKEN=your_telegram_bot_token
 DATABASE_URL=postgresql+asyncpg://user:password@host:5432/dbname
 ```
+
+Файл `.env.example` содержит шаблон необходимых переменных окружения.
 
 | Переменная | Описание |
 | :--- | :--- |
