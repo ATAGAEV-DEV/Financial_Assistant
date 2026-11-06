@@ -10,3 +10,4 @@ main_test.py
 .agent/
 _paddlebot_logs.txt
 test.py
+.env.test
