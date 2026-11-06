@@ -2,11 +2,16 @@ import os
 import unittest
 import uuid
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
+
+# Resolve the test configuration independently of the current working directory.
+load_dotenv(Path(__file__).resolve().parents[2] / ".env.test", override=False)
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 DATABASE_URL = TEST_DATABASE_URL or ""
